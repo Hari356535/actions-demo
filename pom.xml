@@ -38,7 +38,6 @@
          <groupId>org.springframework.boot</groupId>
          <artifactId>spring-boot-starter-web</artifactId>
       </dependency>
-
       <dependency>
          <groupId>com.h2database</groupId>
          <artifactId>h2</artifactId>
@@ -62,18 +61,32 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.8.12</version>
             <executions>
-               <!-- Prepare the agent for code coverage -->
                <execution>
                   <goals>
                      <goal>prepare-agent</goal>
                   </goals>
                </execution>
-               <!-- Generate code coverage report after tests are run -->
                <execution>
                   <id>report</id>
                   <phase>test</phase>
                   <goals>
                      <goal>report</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>4.7.3</version>
+            <configuration>
+               <xmlOutput>true</xmlOutput>
+               <failOnError>false</failOnError>
+            </configuration>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>spotbugs</goal>
                   </goals>
                </execution>
             </executions>
