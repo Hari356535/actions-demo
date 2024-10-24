@@ -1,4 +1,4 @@
-name: Java CI with JaCoCo and SpotBugs
+name: Java CI with Maven
 
 on:
   push:
@@ -14,41 +14,39 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 11 (Temurin)
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
-          path: ~/.m2/repository
+          path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build and run tests with Maven
-        run: mvn clean verify
+      - name: Install dependencies
+        run: mvn install -DskipTests
+
+      - name: Run tests with JaCoCo coverage
+        run: mvn test jacoco:report
+
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/index.html
 
       - name: Run SpotBugs analysis
         run: mvn spotbugs:spotbugs
 
-      - name: Upload SpotBugs XML report
-        uses: lcollins/spotbugs-github-action@v3.1.0
-        with:
-          path: '**/target/spotbugsXml.xml'
-
-      - name: Upload SpotBugs HTML report
+      - name: Upload SpotBugs report
         uses: actions/upload-artifact@v3
         with:
           name: spotbugs-report
-          path: target/site/spotbugs.html
-
-      - name: Run Jacoco and Upload Coverage Report
-        uses: madrapps/jacoco-report@v1.7.1
-        with:
-          coverage-files: '**/target/site/jacoco/jacoco.xml'
-          minimum-coverage: 0
+          path: target/spotbugsXml.xml
