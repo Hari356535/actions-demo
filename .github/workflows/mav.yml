@@ -42,11 +42,46 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/index.html
 
-      - name: Run SpotBugs analysis
-        run: mvn spotbugs:spotbugs
+      - name: Build Project
+        run: mvn -B package
 
-      - name: Upload SpotBugs report
+      - name: Archive Test Reports
+        if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: spotbugs-report
-          path: target/spotbugsXml.xml
+          name: test-reports
+          path: target/surefire-reports/
+
+      - name: Archive Code Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: target/site/jacoco/
+
+      - name: Upload .jar artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-executables
+          path: target/*.jar
+
+      - name: Add coverage to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: |
+            target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 30
+          min-coverage-changed-files: 90
+          title: '# :lobster: Coverage Report'
+          pass-emoji: ':green_circle:'
+          fail-emoji: ':red_circle:'
+
+      - name: Fail PR if overall coverage is less than 30%
+        if: ${{ steps.jacoco.outputs.coverage-overall < 30.0 }}
+        uses: actions/github-script@v7.0.1
+        with:
+          script: |
+            core.setFailed('Coverage is less than 30%!')
+
